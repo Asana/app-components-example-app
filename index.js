@@ -39,10 +39,11 @@ app.get('/widget', (req, res) => {
   res.json(result)
 })
 
-app.get('/modal/metadata', (req, res) => {
-  console.log("Modal Happened!")
+app.get('/form/metadata', (req, res) => {
+  console.log("Form Happened!")
 
   result = {
+    "data": {
       "error": "You must provide either a name or a title",
       "fields": [
         {
@@ -67,7 +68,8 @@ app.get('/modal/metadata', (req, res) => {
       "submit_button_text": "Create New Issue",
       "title": "Create New Issue"
     }
-  
+  }
+
   res.json(result)
 })
 
