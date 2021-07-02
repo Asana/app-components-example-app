@@ -1,9 +1,12 @@
 const express = require('express')
 const https = require('https')
 const fs = require('fs');
+const cors = require('cors')
 const path = require('path');
 const app = express()
 const port = 8000
+
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -43,11 +46,8 @@ app.get('/form/metadata', (req, res) => {
   console.log("Form Happened!")
 
   result = {
-    "data": {
-      "error": "You must provide either a name or a title",
       "fields": [
         {
-          "error": "Maximum description length is 256 characters",
           "id": "item-description",
           "options": [
             {
@@ -64,20 +64,23 @@ app.get('/form/metadata', (req, res) => {
           "width": "full"
         }
       ],
-      "on_submit_callback": "www.example.com/on_submit",
+      "on_submit_callback": "https://localhost:8000/form/submit",
       "submit_button_text": "Create New Issue",
       "title": "Create New Issue"
     }
-  }
 
   res.json(result)
 })
 
-app.post('/modal/submit', (req, res) => {
+app.post('/form/submit', (req, res) => {
   console.log("Modal Submitted!")
   
   console.log(req.json)
 
+  result = {
+    "resource_name": "Build the Thing",
+    "resource_url": "https://localhost:8000"
+  }
   res.status(200).send()
 })
 
