@@ -5,10 +5,10 @@
 <body>
     <script>
         function finish() {
-            window.opener.postMessage("success", "https://localhost.asana.com:8180/");
+            window.opener.postMessage("success", "https://app.asana.com");
             window.close();
         };
     </script>
-    <button onclick=finish>Connect</button>    
+    <button onclick=finish()>Connect</button>
 </body>
 </html>
