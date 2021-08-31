@@ -2,7 +2,7 @@
 
 ## This is part of the [App Components Quick Start](https://developers.asana.com/docs/app-components-quick-start)
 
-This is the backend for the developer example app. This will help developers quickly get started with [App Components](https://developers.asana.com/docs/ui-components-overview).
+This is the backend for the developer example app. This will help developers quickly get started with [App Components](https://developers.asana.com/docs/app-components-overview).
 
 To get started, run:
 
