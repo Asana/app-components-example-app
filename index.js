@@ -93,7 +93,7 @@ attachment_response = {
 }
 
 widget_response = {
-  "template":"summary_with_details_v0",
+  "template": "summary_with_details_v0",
   "metadata": {
     "fields": [
       {
@@ -305,6 +305,6 @@ https.createServer({
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
 }, app)
-.listen(port, function () {
-  console.log(`Example app listening on port ${port}! Go to https://localhost:${port}/`)
-})
+  .listen(port, function () {
+    console.log(`Example app listening on port ${port}! Go to https://localhost:${port}/`)
+  })
