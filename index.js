@@ -23,6 +23,7 @@ app.use(cors());
 app.use((req, res, next) => {
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
   const expirationDate = req.query.expires_at || req.body.expires_at;
+  
   if (new Date().getTime() > expirationDate) {
     console.log("Request expired.");
     return;
@@ -63,6 +64,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/auth", (req, res) => {
+  // We recommend creating a secure Oauth flow (https://developers.asana.com/docs/oauth)
   console.log("Auth happened!");
   res.sendFile(path.join(__dirname, "/auth.html"));
 });
@@ -101,12 +103,12 @@ app.post("/form/submit", (req, res) => {
   res.json(attachment_response);
 });
 
+// Metadata responses (values should be computed based on business logic)
 attachment_response = {
   resource_name: "I'm an Attachment",
   resource_url: "https://localhost:8000",
 };
 
-// Metadata responses
 widget_response = {
   template: "summary_with_details_v0",
   metadata: {
