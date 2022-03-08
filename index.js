@@ -8,25 +8,18 @@ const port = 8000;
 const crypto = require("crypto");
 const dotenv = require("dotenv");
 
-// Enables environment variables
+// Enable environment variables
 dotenv.config({
   path: "./.env",
 });
 
-app.use(cors());
+// Parse JSON bodies
 app.use(express.json());
 
-// Front end endpoints
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// Enable CORS (https://developers.asana.com/docs/security)
+app.use(cors());
 
-app.get("/auth", (req, res) => {
-  console.log("Auth happened!");
-  res.sendFile(path.join(__dirname, "/auth.html"));
-});
-
-// Runs before every API request.
+// (run before every API request)
 app.use((req, res, next) => {
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
   const expirationDate = req.query.expires_at || req.body.expires_at;
@@ -35,7 +28,7 @@ app.use((req, res, next) => {
     return;
   }
 
-  // Assess message integrity (more information: https://developers.asana.com/docs/message-integrity)
+  // Assess message integrity (https://developers.asana.com/docs/message-integrity)
   if (!req.headers["x-asana-request-signature"]) {
     console.log("Signature is missing.");
     return;
@@ -64,6 +57,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Client endpoints
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.get("/auth", (req, res) => {
+  console.log("Auth happened!");
+  res.sendFile(path.join(__dirname, "/auth.html"));
+});
+
+// API endpoints
 app.get("/widget", (req, res) => {
   console.log("Widget happened!");
   res.json(widget_response);
@@ -102,6 +106,7 @@ attachment_response = {
   resource_url: "https://localhost:8000",
 };
 
+// Metadata responses
 widget_response = {
   template: "summary_with_details_v0",
   metadata: {
