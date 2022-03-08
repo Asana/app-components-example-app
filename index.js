@@ -6,62 +6,59 @@ const path = require("path");
 const app = express();
 const port = 8000;
 const crypto = require("crypto");
-const dotenv = require("dotenv");
-
-// Enable environment variables
-dotenv.config({
-  path: "./.env",
-});
 
 // Parse JSON bodies
 app.use(express.json());
 
 // Enable CORS (https://developers.asana.com/docs/security)
-app.use(cors());
+app.use(cors({
+  origin: "https://app.asana.com"
+}));
 
-// (run before every API request)
+// Run before every API request
 app.use((req, res, next) => {
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
   const expirationDate = req.query.expires_at || req.body.expires_at;
-  
+
   if (new Date().getTime() > expirationDate) {
     console.log("Request expired.");
     return;
   }
 
-  // Assess message integrity (https://developers.asana.com/docs/message-integrity)
+  // Assess message integrity (https://developers.asana.com/docs/message-integrity).
+  // The code below is commented because we cannot publicly share the signature's Client Secret. As such, we simply verify that the signature exists.
+  // For more information on the Client Secret, feel free to review the link above.
   if (!req.headers["x-asana-request-signature"]) {
     console.log("Signature is missing.");
     return;
   }
 
-  let stringToVerify;
+  // let stringToVerify;
+  // let secret = "my_client_secret_string"
 
-  if (req.method === "POST") {
-    stringToVerify = req.body.data.toString();
-  } else if (req.method === "GET") {
-    stringToVerify = req._parsedUrl.query;
-  }
+  // if (req.method === "POST") {
+  //   stringToVerify = req.body.data.toString();
+  // } else if (req.method === "GET") {
+  //   stringToVerify = req._parsedUrl.query;
+  // }
 
-  let computedSignature = crypto
-    .createHmac("sha256", process.env.CLIENT_SECRET)
-    .update(stringToVerify)
-    .digest("hex");
+  // let computedSignature = crypto
+  //   .createHmac("sha256", secret)
+  //   .update(stringToVerify)
+  //   .digest("hex");
 
-  if (req.headers["x-asana-request-signature"] !== computedSignature) {
-    console.log("Request cannot be verified.");
-    return;
-  } else {
-    console.log("Request verified!");
-  }
+  // if (req.headers["x-asana-request-signature"] !== computedSignature) {
+  //   console.log("Request cannot be verified.")
+  //   res.status(400);
+  //   return;
+  // } else {
+  //   console.log("Request verified!");
+  // }
 
   next();
 });
 
-// Client endpoints
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// -------------------- Client endpoint for auth (see auth.html) --------------------
 
 app.get("/auth", (req, res) => {
   // We recommend creating a secure Oauth flow (https://developers.asana.com/docs/oauth)
@@ -69,46 +66,57 @@ app.get("/auth", (req, res) => {
   res.sendFile(path.join(__dirname, "/auth.html"));
 });
 
-// API endpoints
+// -------------------- API endpoints --------------------
+
+// Docs: https://developers.asana.com/docs/get-widget-metadata
 app.get("/widget", (req, res) => {
   console.log("Widget happened!");
   res.json(widget_response);
 });
 
+// Docs: https://developers.asana.com/docs/get-form-metadata
 app.get("/form/metadata", (req, res) => {
   console.log("Modal Form happened!");
   res.json(form_response);
 });
 
+// Docs: https://developers.asana.com/docs/get-lookup-typeahead-results
 app.get("/search/typeahead", (req, res) => {
   console.log("Typeahead happened!");
   res.json(typeahead_response);
 });
 
+// Docs: https://developers.asana.com/docs/on-change-callback
 app.post("/form/onchange", (req, res) => {
   console.log("OnChange happened!");
   console.log(req.body);
   res.json(form_response);
 });
 
+// Docs: https://developers.asana.com/docs/attach-resource
 app.post("/search/attach", (req, res) => {
   console.log("Attach happened!");
   console.log(req.body);
   res.json(attachment_response);
 });
 
+// Docs: https://developers.asana.com/docs/on-submit-callback
 app.post("/form/submit", (req, res) => {
   console.log("Modal Form submitted!");
   console.log(req.body);
   res.json(attachment_response);
 });
 
-// Metadata responses (values should be computed based on business logic)
+
+// -------------------- Metadata responses --------------------
+// Note that values should be computed based on business logic
+
 attachment_response = {
   resource_name: "I'm an Attachment",
   resource_url: "https://localhost:8000",
 };
 
+// Docs: https://developers.asana.com/docs/widget
 widget_response = {
   template: "summary_with_details_v0",
   metadata: {
@@ -145,6 +153,7 @@ widget_response = {
   },
 };
 
+// Docs: https://developers.asana.com/docs/modal-form
 form_response = {
   template: "form_metadata_v0",
   metadata: {
