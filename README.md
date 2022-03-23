@@ -2,10 +2,10 @@
 
 This app server is part of the [App Components Example App](https://developers.asana.com/docs/example-app). By following the aforementioned guide, you'll see how an example Express server communicates with requests made from the client. In particular, you'll be able to demo:
 
-* [Widget](https://developers.asana.com/docs/widget)
-* [Modal Form](https://developers.asana.com/docs/modal-form)
-* [Lookup](https://developers.asana.com/docs/lookup)
-* [Entry Point](https://developers.asana.com/docs/entry-point) (within the Asana UI)
+- [Widget](https://developers.asana.com/docs/widget)
+- [Modal Form](https://developers.asana.com/docs/modal-form)
+- [Lookup](https://developers.asana.com/docs/lookup)
+- [Entry Point](https://developers.asana.com/docs/entry-point) (within the Asana UI)
 
 Note that due to the infrastructure behind [App Rules](https://developers.asana.com/docs/rule-action), this repository does not include an example of App Rules running in a local server.
 
@@ -40,7 +40,7 @@ npm install
 4. Start the server (must be kept running when using the app in Asana):
 
 ```
-node index.js
+npm run dev
 ```
 
 5. If blocked by Chrome when opening your page (e.g., an SSL warning), click anywhere in the browser and type:
