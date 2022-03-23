@@ -21,9 +21,9 @@ app.use(
 app.use((req, res, next) => {
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
   const expirationDate = req.query.expires_at || req.body.expires_at;
-  const newDate = new Date();
+  const currentDate = new Date();
 
-  if (newDate.getTime() > new Date(expirationDate).getTime()) {
+  if (currentDate > new Date(expirationDate)) {
     console.log("Request expired.");
     return;
   }
