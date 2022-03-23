@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   const expirationDate = req.query.expires_at || req.body.expires_at;
   const currentDate = new Date();
 
-  if (currentDate > new Date(expirationDate)) {
+  if (currentDate.getTime() > new Date(expirationDate).getTime()) {
     console.log("Request expired.");
     return;
   }
