@@ -11,16 +11,19 @@ const crypto = require("crypto");
 app.use(express.json());
 
 // Enable CORS (https://developers.asana.com/docs/security)
-app.use(cors({
-  origin: "https://app.asana.com"
-}));
+app.use(
+  cors({
+    origin: "https://app.asana.com",
+  })
+);
 
 // Run before every API request
 app.use((req, res, next) => {
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
   const expirationDate = req.query.expires_at || req.body.expires_at;
+  const currentDate = new Date();
 
-  if (new Date().getTime() > expirationDate) {
+  if (currentDate.getTime() > new Date(expirationDate).getTime()) {
     console.log("Request expired.");
     return;
   }
@@ -106,7 +109,6 @@ app.post("/form/submit", (req, res) => {
   console.log(req.body);
   res.json(attachment_response);
 });
-
 
 // -------------------- Metadata responses --------------------
 // Note that values should be computed based on business logic
