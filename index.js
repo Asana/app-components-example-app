@@ -29,15 +29,17 @@ app.use((req, res, next) => {
   }
 
   // Assess message integrity (https://developers.asana.com/docs/message-integrity).
-  // The code below is commented because we cannot publicly share the signature's Client Secret. As such, we simply verify that the signature exists.
+  // The code below is commented because we cannot publicly share the signature's Client Secret.
   // For more information on the Client Secret, feel free to review the link above.
-  if (!req.headers["x-asana-request-signature"]) {
-    console.log("Signature is missing.");
-    return;
-  }
+
+  // Verify that the signature exists
+  // if (!req.headers["x-asana-request-signature"]) {
+  //   console.log("Signature is missing.");
+  //   return;
+  // }
 
   // let stringToVerify;
-  // let secret = "my_client_secret_string"
+  // let secret = "my_client_secret_string";
 
   // if (req.method === "POST") {
   //   stringToVerify = req.body.data.toString();
@@ -49,9 +51,13 @@ app.use((req, res, next) => {
   //   .createHmac("sha256", secret)
   //   .update(stringToVerify)
   //   .digest("hex");
-
-  // if (req.headers["x-asana-request-signature"] !== computedSignature) {
-  //   console.log("Request cannot be verified.")
+  // if (
+  //   !crypto.timingSafeEqual(
+  //     Buffer.from(req.headers["x-asana-request-signature"]),
+  //     Buffer.from(computedSignature)
+  //   )
+  // ) {
+  //   console.log("Request cannot be verified.");
   //   res.status(400);
   //   return;
   // } else {
@@ -123,6 +129,12 @@ widget_response = {
   template: "summary_with_details_v0",
   metadata: {
     fields: [
+      {
+        name: "I'm a name",
+        type: "datetime_with_icon",
+        datetime: "2012-02-22T02:06:58.147Z",
+        icon_url: "https://placekitten.com/16/16",
+      },
       {
         name: "I'm a name",
         type: "pill",
