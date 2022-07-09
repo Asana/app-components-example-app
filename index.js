@@ -159,7 +159,11 @@ widget_response = {
         icon_url: "https://placekitten.com/16/16",
       },
     ],
-    footer: "I'm a footer",
+    footer: {
+      "footer_type": "custom_text",
+      "icon_url": "https://example-icon.png",
+      "text": "I'm a footer"
+    },
     num_comments: 2,
     subicon_url: "https://placekitten.com/16/16",
     subtitle: "I'm a subtitle",
