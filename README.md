@@ -1,13 +1,13 @@
 # App Components Example App Server
 
-This app server is part of the [App Components Example App](https://developers.asana.com/docs/example-app). By following the aforementioned guide, you'll see how an example Express server communicates with requests made from the client. In particular, you'll be able to demo:
+This app server is part of the [app components example app](https://developers.asana.com/docs/example-apps). By following the aforementioned guide, you'll see how an example [Express](https://expressjs.com/) server communicates with requests made from the client. In particular, you'll be able to demo:
 
 - [Widget](https://developers.asana.com/docs/widget)
-- [Modal Form](https://developers.asana.com/docs/modal-form)
+- [Modal form](https://developers.asana.com/docs/modal-form)
 - [Lookup](https://developers.asana.com/docs/lookup)
-- [Entry Point](https://developers.asana.com/docs/entry-point) (within the Asana UI)
+- [Entry point](https://developers.asana.com/docs/entry-point) (within the Asana UI)
 
-Note that due to the infrastructure behind [App Rules](https://developers.asana.com/docs/rule-action), this repository does not include an example of App Rules running in a local server.
+Note: To view an example app server with [rule actions](https://developers.asana.com/docs/rule-action), see [app-components-rule-action-example-app](https://github.com/Asana/app-components-rule-action-example-app).
 
 ## Getting Started
 
@@ -51,5 +51,5 @@ thisisunsafe
 
 ## Resources:
 
-- [Overview of App Components](https://developers.asana.com/docs/overview-of-app-components)
-- [Getting Started](https://developers.asana.com/docs/getting-started) with App Components
+- [Overview of app components](https://developers.asana.com/docs/overview-of-app-components)
+- [Getting started](https://developers.asana.com/docs/getting-started) with app components
