@@ -1,11 +1,21 @@
-const express = require("express");
-const https = require("https");
-const fs = require("fs");
+require("dotenv").config();
+
+// Packages
+const axios = require("axios");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const path = require("path");
-const app = express();
-const port = 8000;
 const crypto = require("crypto");
+const express = require("express");
+const fs = require("fs");
+const https = require("https");
+const { v4: uuidv4 } = require("uuid");
+
+// Constants
+const port = 8000;
+const baseURL = `https://localhost:${port}`;
+const redirectUri = `${baseURL}/oauth/callback`;
+
+const app = express();
 
 // Parse JSON bodies
 app.use(express.json());
@@ -17,14 +27,31 @@ app.use(
   })
 );
 
+// Enable storage of data in cookies.
+// Signed cookies are signed by the COOKIE-SECRET environment variable.
+app.use(cookieParser(process.env.COOKIE_SECRET));
+
+// Set EJS as the templating engine
+app.set('view engine', 'ejs');
+
 // Run before every API request
 app.use((req, res, next) => {
+  // Since Asana does not send `x-asana-request-signature` during oauth exchange.
+  // Skip `x-asana-request-signature` check if it hits one of our /oauth endpoints (i.e., /oauth and /oauth/callback)
+  // or if it's a favicon request.
+  if (req._parsedUrl.pathname.includes('/oauth') || req._parsedUrl.pathname.includes('/favicon.ico')) {
+    next();
+    return;
+  }
+
   // Assess timeliness (https://developers.asana.com/docs/timeliness)
-  const expirationDate = req.query.expires_at || req.body.expires_at;
+  const expirationDate = req.query.expires_at || JSON.parse(req.body.data).expires_at;
   const currentDate = new Date();
 
+  // Check request expiration date if it's included in the request.
   if (currentDate.getTime() > new Date(expirationDate).getTime()) {
     console.log("Request expired.");
+    res.status(408).send("Request expired.");
     return;
   }
 
@@ -33,46 +60,124 @@ app.use((req, res, next) => {
   // For more information on the Client Secret, feel free to review the link above.
 
   // Verify that the signature exists
-  // if (!req.headers["x-asana-request-signature"]) {
-  //   console.log("Signature is missing.");
-  //   return;
-  // }
+  if (!req.headers["x-asana-request-signature"]) {
+    console.log("Request missing x-asana-request-signature");
+    res.status(400).send("Request missing x-asana-request-signature");
+    return;
+  }
 
-  // let stringToVerify;
-  // let secret = "my_client_secret_string";
+  let stringToVerify;
 
-  // if (req.method === "POST") {
-  //   stringToVerify = req.body.data.toString();
-  // } else if (req.method === "GET") {
-  //   stringToVerify = req._parsedUrl.query;
-  // }
+  if (req.method === "POST") {
+    stringToVerify = req.body.data.toString();
+  } else if (req.method === "GET") {
+    stringToVerify = req._parsedUrl.query;
+  }
 
-  // let computedSignature = crypto
-  //   .createHmac("sha256", secret)
-  //   .update(stringToVerify)
-  //   .digest("hex");
-  // if (
-  //   !crypto.timingSafeEqual(
-  //     Buffer.from(req.headers["x-asana-request-signature"]),
-  //     Buffer.from(computedSignature)
-  //   )
-  // ) {
-  //   console.log("Request cannot be verified.");
-  //   res.status(400);
-  //   return;
-  // } else {
-  //   console.log("Request verified!");
-  // }
+  let computedSignature = crypto
+    .createHmac("sha256", process.env.CLIENT_SECRET)
+    .update(stringToVerify)
+    .digest("hex");
+
+  try {
+    if (crypto.timingSafeEqual(
+      Buffer.from(req.headers["x-asana-request-signature"]),
+      Buffer.from(computedSignature)
+    )) {
+      console.log("Request verified!");
+    } else {
+      console.log("x-asana-request-signature validation failed");
+      res.status(400).send("x-asana-request-signature validation failed");
+      return;
+    }
+  } catch (error) {
+    console.log("x-asana-request-signature validation failed");
+    res.status(400).send("x-asana-request-signature validation failed");
+    return;
+  }
 
   next();
 });
 
-// -------------------- Client endpoint for auth (see auth.html) --------------------
+// -------------------- Client endpoints for OAuth --------------------
 
-app.get("/auth", (req, res) => {
-  // We recommend creating a secure Oauth flow (https://developers.asana.com/docs/oauth)
-  console.log("Auth happened!");
-  res.sendFile(path.join(__dirname, "/auth.html"));
+// Add this to the `Custom authentication URL` in your app's Asana Developer Console OAuth page
+app.get("/oauth", (req, res) => {
+  // Generate a `state` value and store it. We are generating UUIDs for this example to make it not guessable.
+  // Docs: https://developers.asana.com/docs/oauth#response
+  let generatedState = uuidv4();
+
+  // Expiration of 5 minutes
+  res.cookie("state", generatedState, {
+    maxAge: 1000 * 60 * 5,
+    signed: true,
+  });
+
+  let userAuthorizationLink = `https://app.asana.com/-/oauth_authorize?response_type=code&client_id=${process.env.CLIENT_ID}&redirect_uri=${redirectUri}&state=${generatedState}`
+
+  res.render("app_server_app_auth_page", {"userAuthorizationLink": userAuthorizationLink});
+});
+
+// Add this to the `Redirect URLs` in your app's Asana Developer Console OAuth page
+app.get("/oauth/callback", (req, res) => {
+  // Prevent CSRF attacks by validating the 'state' parameter.
+  // Docs: https://developers.asana.com/docs/oauth#user-authorization-endpoint
+  if (req.query.state !== req.signedCookies.state) {
+    res.status(422).send("The 'state' parameter does not match.");
+    return;
+  }
+
+  // Check if the user clicked on "deny" on the grant permissions page.
+  // If so, let Asana know that the app auth failed.
+  if(req.query.error === 'access_denied') {
+    res.render("send_app_auth_info", {"status": 'error'});
+  }
+
+  console.log(
+    "***** Code (to be exchanged for a token) and state from the user authorization response:\n"
+  );
+
+  // Body of the POST request to the token exchange endpoint.
+  const body = {
+    grant_type: "authorization_code",
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    redirect_uri: redirectUri,
+    code: req.query.code,
+  };
+
+  // Set Axios to serialize the body to urlencoded format.
+  const config = {
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+    },
+  };
+
+  // Make the request to the token exchange endpoint.
+  // Docs: https://developers.asana.com/docs/oauth#token-exchange-endpoint
+  axios
+    .post("https://app.asana.com/-/oauth_token", body, config)
+    .then((res) => {
+      console.log("***** Response from the token exchange request:\n");
+      console.log(res.data);
+      return res.data;
+    })
+    .then((data) => {
+      // Store tokens in cookies.
+      // In a production app, you should store this data somewhere secure and durable instead (e.g., a database).
+      res.cookie("access_token", data.access_token, { maxAge: 60 * 60 * 1000 });
+      res.cookie("refresh_token", data.refresh_token, {
+        // Prevent client-side scripts from accessing this data.
+        httpOnly: true,
+        secure: true,
+      });
+
+      // Let Asana know that the app component auth has completed successfully
+      res.render("send_app_auth_info", {"status": 'success'});
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 });
 
 // -------------------- API endpoints --------------------
@@ -121,7 +226,7 @@ app.post("/form/submit", (req, res) => {
 
 attachment_response = {
   resource_name: "I'm an Attachment",
-  resource_url: "https://localhost:8000",
+  resource_url: baseURL,
 };
 
 // Docs: https://developers.asana.com/docs/widget
@@ -176,7 +281,7 @@ form_response = {
   template: "form_metadata_v0",
   metadata: {
     title: "I'm a title",
-    on_submit_callback: "https://localhost:8000/form/submit",
+    on_submit_callback: `${baseURL}/form/submit`,
     fields: [
       {
         name: "I'm a single_line_text",
@@ -310,7 +415,7 @@ form_response = {
         type: "typeahead",
         id: "typeahead_half_width",
         is_required: false,
-        typeahead_url: "https://localhost:8000/search/typeahead",
+        typeahead_url: `${baseURL}/search/typeahead`,
         placeholder: "[half width]",
         width: "half",
       },
@@ -319,12 +424,12 @@ form_response = {
         type: "typeahead",
         id: "typeahead_full_width",
         is_required: false,
-        typeahead_url: "https://localhost:8000/search/typeahead",
+        typeahead_url: `${baseURL}/search/typeahead`,
         placeholder: "[full width]",
         width: "full",
       },
     ],
-    on_change_callback: "https://localhost:8000/form/onchange",
+    on_change_callback: `${baseURL}/form/onchange`,
   },
 };
 
@@ -355,6 +460,6 @@ https
   )
   .listen(port, function () {
     console.log(
-      `Example app listening on port ${port}! Go to https://localhost:${port}/`
+      `Example app listening on port ${port}! Base URL: ${baseURL}`
     );
   });

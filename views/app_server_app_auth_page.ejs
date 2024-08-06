@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head> </head>
+    <body>
+        <button id="userAuthButton">Authorize</button>
+        <script>
+            document
+                .getElementById("userAuthButton")
+                .addEventListener("click", function () {
+                    window.location.href = "<%- userAuthorizationLink %>";
+                });
+        </script>
+    </body>
+</html>
