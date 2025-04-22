@@ -1,0 +1,22 @@
+
+{
+  "app_name": "Sustainable Progress Tracker",
+  "description": "Calculates task progress based on subtasks and frames it in a sustainability context.",
+  "version": "1.0.0",
+  "author": "Your Name/Company", // Change this!
+  "app_url": "https://your-app-url.com", // Optional: A URL for more info about your app
+  "oauth_scopes": [ // Permissions needed
+    "tasks:read" // To read task and subtask details
+  ],
+  "modules": {
+    "widgets": [
+      {
+        "name": "progress_widget", // Internal name for the widget
+        "label": "Sustainable Progress", // Name shown to users when adding the widget
+        "asset": "widget.json", // Points to the UI Builder definition file
+        "location": "task_pane", // Where the widget appears (in the task details pane)
+        "input_options": [] // No specific user inputs needed on install for this version
+      }
+    ]
+  }
+}
